@@ -2,29 +2,29 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { api, saveAuth, type AuthUser } from '@/lib/auth';
-import { ALL_ROLES, ROLE_DASHBOARDS, ROLE_LABELS } from '@/lib/roles';
+import { api, type AuthUser } from '@/lib/auth';
+import { PUBLIC_ROLES, ROLE_LABELS } from '@/lib/roles';
 
 export default function RegisterPage() {
-  const router = useRouter();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState(ALL_ROLES[2]);
+  const [role, setRole] = useState(PUBLIC_ROLES[0]);
   const [error, setError] = useState('');
+  const [done, setDone] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
     try {
-      const res = await api<{ accessToken: string; user: AuthUser }>('/auth/register', {
+      // Public registration creates a pending account and returns NO token:
+      // the user must wait for admin approval, then log in.
+      await api<{ user: AuthUser; message: string }>('/auth/register', {
         method: 'POST',
         body: JSON.stringify({ name, email, phone: phone || undefined, password, role }),
       });
-      saveAuth(res.accessToken, res.user);
-      router.push(ROLE_DASHBOARDS[res.user.role]);
+      setDone(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
     }
@@ -46,13 +46,18 @@ export default function RegisterPage() {
           <input id="password" className="input" type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} />
           <label className="label" htmlFor="role">Register as</label>
           <select id="role" className="input" value={role} onChange={(e) => setRole(e.target.value as typeof role)}>
-            {ALL_ROLES.map((r) => (
+            {PUBLIC_ROLES.map((r) => (
               <option key={r} value={r}>{ROLE_LABELS[r]}</option>
             ))}
           </select>
           {error && <p className="error">{error}</p>}
           <button className="btn" type="submit" style={{ width: '100%' }}>Create account</button>
         </form>
+        {done && (
+          <p style={{ marginTop: 12 }}>
+            Account created and pending approval. An admin will review it — you can log in once it is approved.
+          </p>
+        )}
         <p className="muted">Already have an account? <Link href="/login" style={{ color: '#b8932b', fontWeight: 600 }}>Log in</Link></p>
       </div>
     </main>

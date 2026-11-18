@@ -1,4 +1,4 @@
-import { ConflictException, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { AuthService } from '../auth.service';
@@ -22,7 +22,7 @@ const baseUser = {
   name: 'Admin',
   phone: null,
   role: 'super_admin',
-  approvalStatus: 'pending',
+  approvalStatus: 'approved',
   status: 'active',
   createdAt: new Date('2026-11-18T00:00:00.000Z'),
 };
@@ -30,23 +30,41 @@ const baseUser = {
 describe('AuthService', () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it('registers a new user with a bcrypt-hashed password and returns a JWT', async () => {
+  it('registers a new non-admin user with a bcrypt-hashed password and NO token (pending approval)', async () => {
     const { service, prisma } = makeService();
     prisma.user.findUnique.mockResolvedValue(null);
     (mockedBcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
-    prisma.user.create.mockResolvedValue({ ...baseUser, passwordHash: 'hashed-password' });
+    prisma.user.create.mockResolvedValue({ ...baseUser, email: 'driver@lezit.example', role: 'driver', approvalStatus: 'pending' });
 
     const result = await service.register({
-      email: 'admin@lezit.example',
+      email: 'driver@lezit.example',
       password: 'password123',
-      name: 'Admin',
-      role: 'super_admin',
+      name: 'Driver',
+      role: 'driver',
     });
 
     expect(mockedBcrypt.hash).toHaveBeenCalledWith('password123', 10);
-    expect(result.accessToken).toBe('test-jwt-token');
-    expect(result.user.email).toBe('admin@lezit.example');
+    expect(result).not.toHaveProperty('accessToken');
+    expect(result.user.email).toBe('driver@lezit.example');
+    expect(result.user.approvalStatus).toBe('pending');
     expect(result.user).not.toHaveProperty('passwordHash');
+    expect(result.message).toMatch(/pending approval/i);
+  });
+
+  it('rejects public registration as super_admin', async () => {
+    const { service, prisma } = makeService();
+    await expect(
+      service.register({ email: 'admin@lezit.example', password: 'password123', name: 'Admin', role: 'super_admin' }),
+    ).rejects.toThrow(ForbiddenException);
+    expect(prisma.user.create).not.toHaveBeenCalled();
+  });
+
+  it('rejects public registration as lezit_admin', async () => {
+    const { service, prisma } = makeService();
+    await expect(
+      service.register({ email: 'admin@lezit.example', password: 'password123', name: 'Admin', role: 'lezit_admin' }),
+    ).rejects.toThrow(ForbiddenException);
+    expect(prisma.user.create).not.toHaveBeenCalled();
   });
 
   it('rejects registration when the email already exists', async () => {
@@ -57,7 +75,7 @@ describe('AuthService', () => {
     ).rejects.toThrow(ConflictException);
   });
 
-  it('logs in with correct credentials and returns a JWT', async () => {
+  it('logs in an approved user with correct credentials and returns a JWT', async () => {
     const { service, prisma } = makeService();
     prisma.user.findUnique.mockResolvedValue({ ...baseUser, passwordHash: 'hashed-password' });
     (mockedBcrypt.compare as jest.Mock).mockResolvedValue(true);
@@ -73,6 +91,33 @@ describe('AuthService', () => {
     (mockedBcrypt.compare as jest.Mock).mockResolvedValue(false);
     await expect(
       service.login({ email: 'admin@lezit.example', password: 'wrong-password' }),
+    ).rejects.toThrow(UnauthorizedException);
+  });
+
+  it('rejects login for a pending-approval user', async () => {
+    const { service, prisma } = makeService();
+    prisma.user.findUnique.mockResolvedValue({ ...baseUser, approvalStatus: 'pending', passwordHash: 'hashed-password' });
+    (mockedBcrypt.compare as jest.Mock).mockResolvedValue(true);
+    await expect(
+      service.login({ email: 'admin@lezit.example', password: 'password123' }),
+    ).rejects.toThrow(ForbiddenException);
+  });
+
+  it('rejects login for a rejected user', async () => {
+    const { service, prisma } = makeService();
+    prisma.user.findUnique.mockResolvedValue({ ...baseUser, approvalStatus: 'rejected', passwordHash: 'hashed-password' });
+    (mockedBcrypt.compare as jest.Mock).mockResolvedValue(true);
+    await expect(
+      service.login({ email: 'admin@lezit.example', password: 'password123' }),
+    ).rejects.toThrow(ForbiddenException);
+  });
+
+  it('rejects login for a deactivated user', async () => {
+    const { service, prisma } = makeService();
+    prisma.user.findUnique.mockResolvedValue({ ...baseUser, status: 'inactive', passwordHash: 'hashed-password' });
+    (mockedBcrypt.compare as jest.Mock).mockResolvedValue(true);
+    await expect(
+      service.login({ email: 'admin@lezit.example', password: 'password123' }),
     ).rejects.toThrow(UnauthorizedException);
   });
 });

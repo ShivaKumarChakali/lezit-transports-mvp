@@ -1,5 +1,6 @@
-import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
-import { IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { Body, Controller, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { ApprovalStatus } from '@prisma/client';
 import { JwtAuthGuard } from '../common/jwt-auth.guard';
 import { RolesGuard } from '../common/roles.guard';
 import { Roles } from '../common/roles.decorator';
@@ -28,6 +29,11 @@ class CreateVehicleDto {
   seatCapacity?: number;
 }
 
+class VehicleApprovalDto {
+  @IsEnum(ApprovalStatus)
+  approvalStatus!: ApprovalStatus;
+}
+
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('vehicles')
 export class VehiclesController {
@@ -47,7 +53,13 @@ export class VehiclesController {
 
   @Roles('super_admin', 'lezit_admin', 'vehicle_owner')
   @Get(':id')
-  get(@Param('id') id: string) {
-    return this.vehicles.get(id);
+  get(@Req() req: { user: { sub: string; role: string } }, @Param('id') id: string) {
+    return this.vehicles.get(id, req.user.sub, req.user.role);
+  }
+
+  @Roles('super_admin', 'lezit_admin')
+  @Patch(':id/approval')
+  setApproval(@Param('id') id: string, @Body() dto: VehicleApprovalDto) {
+    return this.vehicles.setApproval(id, dto.approvalStatus);
   }
 }
