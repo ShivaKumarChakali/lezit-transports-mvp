@@ -3,12 +3,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import DashboardCard from '@/components/DashboardCard';
 import { api, type AuthUser } from '@/lib/auth';
-import type { ApiDocument, ApiProfile, ApiVehicle } from '@/lib/api-types';
+import type { ApiDocument, ApiProfile, ApiSchedule, ApiTrip, ApiVehicle } from '@/lib/api-types';
 
 export default function OwnerDashboard() {
   const [me, setMe] = useState<AuthUser | null>(null);
   const [vehicles, setVehicles] = useState<ApiVehicle[]>([]);
   const [documents, setDocuments] = useState<ApiDocument[]>([]);
+  const [schedules, setSchedules] = useState<ApiSchedule[]>([]);
+  const [trips, setTrips] = useState<ApiTrip[]>([]);
   const [profile, setProfile] = useState<ApiProfile>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -29,15 +31,19 @@ export default function OwnerDashboard() {
     setLoading(true);
     setError('');
     try {
-      const [m, v, d, p] = await Promise.all([
+      const [m, v, d, p, s, t] = await Promise.all([
         api<AuthUser>('/auth/me'),
         api<ApiVehicle[]>('/vehicles'),
         api<ApiDocument[]>('/documents'),
         api<{ role: string; profile: ApiProfile }>('/profiles/me'),
+        api<ApiSchedule[]>('/schedules'),
+        api<ApiTrip[]>('/trips'),
       ]);
       setMe(m);
       setVehicles(v);
       setDocuments(d);
+      setSchedules(s);
+      setTrips(t);
       setProfile(p.profile);
       if (p.profile) {
         setBusinessName(String(p.profile.businessName ?? ''));
@@ -150,6 +156,18 @@ export default function OwnerDashboard() {
           <input id="seats" className="input" type="number" min={1} value={seats} onChange={(e) => setSeats(e.target.value)} />
           <button className="btn" type="submit">Register vehicle</button>
         </form>
+      </div>
+
+      <div className="card" style={{ marginTop: 16 }}>
+        <h3>Schedules &amp; trips using my vehicles</h3>
+        {schedules.length === 0 && <p className="muted">No schedules use your vehicles yet.</p>}
+        {schedules.map((s) => (
+          <p key={s.id}>{s.departureTime} · {s.days.join(', ') || 'no days set'} · {s.active ? 'active' : 'inactive'}</p>
+        ))}
+        {trips.length === 0 && <p className="muted">No trips use your vehicles yet.</p>}
+        {trips.map((t) => (
+          <p key={t.id}>{new Date(t.date).toLocaleDateString()} · {t.status}</p>
+        ))}
       </div>
 
       <div className="card" style={{ marginTop: 16 }}>

@@ -3,11 +3,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import DashboardCard from '@/components/DashboardCard';
 import { api, type AuthUser } from '@/lib/auth';
-import type { ApiProfile } from '@/lib/api-types';
+import type { ApiBooking, ApiProfile, ApiTrip } from '@/lib/api-types';
 
 export default function DriverDashboard() {
   const [me, setMe] = useState<AuthUser | null>(null);
   const [profile, setProfile] = useState<ApiProfile>(null);
+  const [trips, setTrips] = useState<ApiTrip[]>([]);
+  const [tripBookings, setTripBookings] = useState<ApiBooking[]>([]);
+  const [activeTripId, setActiveTripId] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -18,12 +21,14 @@ export default function DriverDashboard() {
     setLoading(true);
     setError('');
     try {
-      const [m, p] = await Promise.all([
+      const [m, p, t] = await Promise.all([
         api<AuthUser>('/auth/me'),
         api<{ role: string; profile: ApiProfile }>('/profiles/me'),
+        api<ApiTrip[]>('/trips'),
       ]);
       setMe(m);
       setProfile(p.profile);
+      setTrips(t);
       if (p.profile) {
         setLicenceNumber(String(p.profile.licenceNumber ?? ''));
         const expiry = p.profile.licenceExpiry;
@@ -55,6 +60,40 @@ export default function DriverDashboard() {
     }
   }
 
+  async function loadTripBookings(tripId: string) {
+    setActiveTripId(tripId);
+    setError('');
+    try {
+      setTripBookings(await api<ApiBooking[]>(`/trips/${tripId}/bookings`));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not load trip passengers');
+    }
+  }
+
+  async function tripAction(tripId: string, action: 'start' | 'complete') {
+    setError('');
+    try {
+      await api(`/trips/${tripId}/${action}`, { method: 'PATCH' });
+      setNotice(`Trip ${action === 'start' ? 'started' : 'completed'}.`);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Trip action failed');
+    }
+  }
+
+  async function attendance(tripId: string, passengerId: string, bookingId: string | null, action: 'check-in' | 'check-out') {
+    setError('');
+    try {
+      await api(`/attendance/${action}`, {
+        method: 'POST',
+        body: JSON.stringify({ tripId, passengerId, ...(bookingId ? { bookingId } : {}) }),
+      });
+      setNotice(`Passenger ${action === 'check-in' ? 'checked in' : 'checked out'}.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Attendance action failed');
+    }
+  }
+
   return (
     <div>
       <h1>Driver Dashboard</h1>
@@ -66,7 +105,41 @@ export default function DriverDashboard() {
         <DashboardCard title="Licence" value={licenceNumber || '—'} note="Driving licence information and expiry" />
         <DashboardCard title="Verification" value={me ? me.approvalStatus : '—'} note="Identity document uploads and verification status" />
         <DashboardCard title="Assigned vehicle" value="—" note="No vehicle assigned yet — assignments arrive in Phase 2" />
-        <DashboardCard title="Today's trips" value="—" note="Phase 2: daily trip schedules and passenger lists" />
+        <DashboardCard title="Today's trips" value={loading ? '—' : String(trips.length)} note="Your assigned trips" />
+      </div>
+      <div className="card" style={{ marginTop: 16 }}>
+        <h3>My trips</h3>
+        {trips.length === 0 && <p className="muted">No trips assigned yet.</p>}
+        {trips.map((t) => (
+          <p key={t.id}>
+            {new Date(t.date).toLocaleDateString()} · {t.status}
+            {' '}
+            {t.status === 'scheduled' && (
+              <button className="btn" onClick={() => void tripAction(t.id, 'start')}>Start trip</button>
+            )}
+            {' '}
+            {t.status === 'in_progress' && (
+              <button className="btn" onClick={() => void tripAction(t.id, 'complete')}>Complete trip</button>
+            )}
+            {' '}
+            <button className="btn btn-secondary" onClick={() => void loadTripBookings(t.id)}>Passengers</button>
+          </p>
+        ))}
+        {activeTripId && (
+          <div style={{ marginTop: 12 }}>
+            <h3>Passengers on this trip</h3>
+            {tripBookings.length === 0 && <p className="muted">No bookings on this trip.</p>}
+            {tripBookings.map((b) => (
+              <p key={b.id}>
+                {b.seats} seat(s) · {b.status}
+                {' '}
+                <button className="btn" onClick={() => void attendance(activeTripId, b.passengerId, b.id, 'check-in')}>Check in</button>
+                {' '}
+                <button className="btn btn-secondary" onClick={() => void attendance(activeTripId, b.passengerId, b.id, 'check-out')}>Check out</button>
+              </p>
+            ))}
+          </div>
+        )}
       </div>
       <div className="card" style={{ marginTop: 16 }}>
         <h3>Driving licence</h3>

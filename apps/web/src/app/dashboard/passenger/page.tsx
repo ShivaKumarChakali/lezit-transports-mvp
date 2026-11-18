@@ -3,11 +3,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import DashboardCard from '@/components/DashboardCard';
 import { api, type AuthUser } from '@/lib/auth';
-import type { ApiProfile } from '@/lib/api-types';
+import type { ApiAttendance, ApiBooking, ApiProfile } from '@/lib/api-types';
 
 export default function PassengerDashboard() {
   const [me, setMe] = useState<AuthUser | null>(null);
   const [profile, setProfile] = useState<ApiProfile>(null);
+  const [bookings, setBookings] = useState<ApiBooking[]>([]);
+  const [attendance, setAttendance] = useState<ApiAttendance[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -18,12 +20,16 @@ export default function PassengerDashboard() {
     setLoading(true);
     setError('');
     try {
-      const [m, p] = await Promise.all([
+      const [m, p, b, a] = await Promise.all([
         api<AuthUser>('/auth/me'),
         api<{ role: string; profile: ApiProfile }>('/profiles/me'),
+        api<ApiBooking[]>('/bookings'),
+        api<ApiAttendance[]>('/attendance'),
       ]);
       setMe(m);
       setProfile(p.profile);
+      setBookings(b);
+      setAttendance(a);
       if (p.profile) {
         setEmployeeId(String(p.profile.employeeId ?? ''));
         setOrgId(String(p.profile.orgId ?? ''));
@@ -62,10 +68,27 @@ export default function PassengerDashboard() {
       {error && <p className="error">{error}</p>}
       {notice && <p>{notice}</p>}
       <div className="grid">
-        <DashboardCard title="My transport" value="—" note="Phase 2: assigned vehicle, driver, route and schedule" />
-        <DashboardCard title="Pickup & drop" value="—" note="Phase 2: pickup and drop locations" />
-        <DashboardCard title="Booking status" value="—" note="Phase 2: booking status and trip history" />
-        <DashboardCard title="Attendance" value="—" note="Phase 2: basic attendance history" />
+        <DashboardCard title="My transport" value={loading ? '—' : String(bookings.filter((b) => b.status === 'confirmed').length)} note="Confirmed bookings" />
+        <DashboardCard title="Pickup & drop" value="—" note="See your booking's route for pickup and drop locations" />
+        <DashboardCard title="Booking status" value={loading ? '—' : String(bookings.length)} note="Your bookings" />
+        <DashboardCard title="Attendance" value={loading ? '—' : String(attendance.length)} note="Your check-in / check-out records" />
+      </div>
+      <div className="card" style={{ marginTop: 16 }}>
+        <h3>My bookings</h3>
+        {bookings.length === 0 && <p className="muted">No bookings yet — an admin creates bookings for you.</p>}
+        {bookings.map((b) => (
+          <p key={b.id}>{b.seats} seat(s) · {b.status} · booked {new Date(b.createdAt).toLocaleDateString()}</p>
+        ))}
+      </div>
+      <div className="card" style={{ marginTop: 16 }}>
+        <h3>Attendance history</h3>
+        {attendance.length === 0 && <p className="muted">No attendance records yet.</p>}
+        {attendance.map((a) => (
+          <p key={a.id}>
+            {a.status} · checked in {new Date(a.checkInAt).toLocaleString()}
+            {a.checkOutAt ? ` · checked out ${new Date(a.checkOutAt).toLocaleString()}` : ''}
+          </p>
+        ))}
       </div>
       <div className="card" style={{ marginTop: 16 }}>
         <h3>Passenger profile</h3>

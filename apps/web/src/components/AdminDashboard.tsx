@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import DashboardCard from '@/components/DashboardCard';
+import OperationsPanel from '@/components/OperationsPanel';
 import { api } from '@/lib/auth';
 import type { ApiUser, ApiVehicle } from '@/lib/api-types';
 
@@ -125,6 +126,8 @@ export default function AdminDashboard({ title, subtitle }: { title: string; sub
           </p>
         ))}
       </div>
+
+      <OperationsPanel />
     </div>
   );
 }

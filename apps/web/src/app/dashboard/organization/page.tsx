@@ -3,11 +3,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import DashboardCard from '@/components/DashboardCard';
 import { api, type AuthUser } from '@/lib/auth';
-import type { ApiProfile } from '@/lib/api-types';
+import type { ApiProfile, ApiRoute, ApiSchedule } from '@/lib/api-types';
 
 export default function OrganizationDashboard() {
   const [me, setMe] = useState<AuthUser | null>(null);
   const [profile, setProfile] = useState<ApiProfile>(null);
+  const [routes, setRoutes] = useState<ApiRoute[]>([]);
+  const [schedules, setSchedules] = useState<ApiSchedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -19,12 +21,16 @@ export default function OrganizationDashboard() {
     setLoading(true);
     setError('');
     try {
-      const [m, p] = await Promise.all([
+      const [m, p, r, s] = await Promise.all([
         api<AuthUser>('/auth/me'),
         api<{ role: string; profile: ApiProfile }>('/profiles/me'),
+        api<ApiRoute[]>('/routes'),
+        api<ApiSchedule[]>('/schedules'),
       ]);
       setMe(m);
       setProfile(p.profile);
+      setRoutes(r);
+      setSchedules(s);
       if (p.profile) {
         setOrgName(String(p.profile.orgName ?? ''));
         setContactPerson(String(p.profile.contactPerson ?? ''));
@@ -66,8 +72,21 @@ export default function OrganizationDashboard() {
       <div className="grid">
         <DashboardCard title="Profile" value={orgName || '—'} note="Organization profile and contact information" />
         <DashboardCard title="Passengers" value="—" note="Phase 2: employee / student passenger registration" />
-        <DashboardCard title="Assigned transport" value="—" note="Phase 2: assigned routes, schedules and vehicles" />
+        <DashboardCard title="Assigned transport" value={loading ? '—' : String(routes.length)} note="Routes available to the organization" />
         <DashboardCard title="Attendance" value="—" note="Phase 2: passenger attendance overview" />
+      </div>
+      <div className="card" style={{ marginTop: 16 }}>
+        <h3>Routes &amp; schedules</h3>
+        {routes.length === 0 && <p className="muted">No routes published yet.</p>}
+        {routes.map((r) => (
+          <p key={r.id}>
+            {r.name} · {r.startLocation} → {r.endLocation}
+          </p>
+        ))}
+        {schedules.length === 0 && <p className="muted">No schedules published yet.</p>}
+        {schedules.map((s) => (
+          <p key={s.id}>{s.departureTime} · {s.days.join(', ') || 'no days set'} · {s.active ? 'active' : 'inactive'}</p>
+        ))}
       </div>
       <div className="card" style={{ marginTop: 16 }}>
         <h3>Organization profile</h3>

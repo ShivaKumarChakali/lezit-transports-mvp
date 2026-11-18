@@ -97,12 +97,24 @@ the repo — it comes from the environment only.
 - Prisma schema: users, vehicle-owner / driver / organization / passenger profiles, vehicles, documents (metadata only), approval status `pending | approved | rejected`, account status `active | inactive`
 - API: `POST /auth/register`, `POST /auth/login`, `GET /auth/me`, `GET /users` (admin), `GET /users/:id`, `PATCH /users/:id/approval`, `PATCH /users/:id/status`, `POST /users` (Super Admin creates admin accounts), `GET /vehicles`, `POST /vehicles`, `GET /vehicles/:id`, `PATCH /vehicles/:id/approval`, `GET /profiles/me`, `PATCH /profiles/me`, `GET /profiles/:userId` (admin), `POST /documents`, `GET /documents`, `GET /documents/:id`, `PATCH /documents/:id/verify` (admin)
 
-## What is still TODO (Phase 2)
+## Phase 2 — operations (included in this build)
 
-Routes, pickup/drop locations, schedules, vehicle/driver assignment, passenger
-registration & allocation, manual bookings, trip management, passenger
-attendance (check-in / check-out), seat-capacity validation, basic operational
-reports, testing & UAT, production deployment & handover.
+- Routes (`POST /routes`, `GET /routes`, `GET /routes/:id`, `PATCH /routes/:id` — admin only for writes) with start / end locations and stops.
+- Schedules (`POST /schedules`, `GET /schedules`, `GET /schedules/:id`, `PATCH /schedules/:id` — admin only for writes): departure time, days, vehicle and driver assignment. Owners see only schedules using their vehicles; drivers see only their own.
+- Manual bookings (`POST /bookings`, `GET /bookings`, `GET /bookings/:id`, `PATCH /bookings/:id/status` — admin creates them, passengers see only their own): seat capacity is validated against the scheduled vehicle's capacity, and overbooking is rejected.
+- Trips (`POST /trips`, `GET /trips`, `GET /trips/:id`, `GET /trips/:id/bookings`, `PATCH /trips/:id/start`, `PATCH /trips/:id/complete`): drivers start / complete only their own assigned trips; completing a trip marks its confirmed bookings completed.
+- Attendance (`POST /attendance/check-in`, `POST /attendance/check-out`, `GET /attendance`): the assigned driver (or an admin) checks passengers in and out of a trip; passengers see only their own records.
+- Basic operational reports (`GET /reports/overview` — admin): user / vehicle / route / schedule / booking / trip / attendance counts by status.
+- Dashboards: the admin dashboards include the operations panel (create routes, schedules, manual bookings and trips, plus the report); drivers see their trips with start / complete and passenger check-in / check-out; passengers see their bookings and attendance history; owners see schedules and trips using their vehicles; organizations see published routes and schedules.
+
+## What is still TODO
+
+Testing & UAT with the friend's team, production deployment & handover. The
+Phase 1 and Phase 2 scopes above are built; the items below remain explicitly
+out of the MVP: automated self-service booking, live GPS tracking & maps,
+OTP / QR passenger verification, online payment gateway, automated invoices &
+settlements, SMS / WhatsApp integrations, emergency SOS, advanced reporting &
+analytics, AI route optimisation, native Android / iOS apps.
 
 ## CI / CD
 
