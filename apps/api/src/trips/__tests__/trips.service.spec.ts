@@ -58,10 +58,34 @@ describe('TripsService', () => {
     });
   });
 
-  it('lists only the assigned driver’s trips for a driver', async () => {
+  it('lists only the assigned driver’s trips for a driver, with vehicle details', async () => {
     const { service, prisma } = makeService();
     prisma.trip.findMany.mockResolvedValue([trip]);
     await service.list('drv-1', 'driver');
-    expect(prisma.trip.findMany).toHaveBeenCalledWith({ where: { driverId: 'drv-1' }, orderBy: { date: 'desc' } });
+    expect(prisma.trip.findMany).toHaveBeenCalledWith({
+      where: { driverId: 'drv-1' },
+      orderBy: { date: 'desc' },
+      include: { vehicle: { select: { registrationNumber: true, make: true, model: true } } },
+    });
+  });
+
+  it('stores a bare calendar date at noon UTC so it cannot shift a day', async () => {
+    const { service, prisma } = makeService();
+    prisma.route.findUnique.mockResolvedValue({ id: 'route-1' });
+    prisma.trip.create.mockResolvedValue(trip);
+    await service.create({ routeId: 'route-1', date: '2026-11-18' });
+    expect(prisma.trip.create).toHaveBeenCalledWith({
+      data: { routeId: 'route-1', date: new Date('2026-11-18T12:00:00.000Z') },
+    });
+  });
+
+  it('passes a full timestamp through unchanged', async () => {
+    const { service, prisma } = makeService();
+    prisma.route.findUnique.mockResolvedValue({ id: 'route-1' });
+    prisma.trip.create.mockResolvedValue(trip);
+    await service.create({ routeId: 'route-1', date: '2026-11-18T08:00:00.000Z' });
+    expect(prisma.trip.create).toHaveBeenCalledWith({
+      data: { routeId: 'route-1', date: new Date('2026-11-18T08:00:00.000Z') },
+    });
   });
 });

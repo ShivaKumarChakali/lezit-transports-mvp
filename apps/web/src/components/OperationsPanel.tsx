@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import DashboardCard from '@/components/DashboardCard';
 import { api } from '@/lib/auth';
+import { formatDateOnly } from '@/lib/dates';
 import type { ApiBooking, ApiRoute, ApiSchedule, ApiTrip, ApiUser, ApiVehicle } from '@/lib/api-types';
 
 // Phase 2 operations for Super Admin / LEZIT Admin: routes, schedules,
@@ -294,7 +295,7 @@ export default function OperationsPanel() {
         {trips.length === 0 && <p className="muted">No trips yet.</p>}
         {trips.map((t) => (
           <p key={t.id}>
-            {new Date(t.date).toLocaleDateString()} · {t.status}
+            {formatDateOnly(t.date)} · {t.status}
           </p>
         ))}
         <form

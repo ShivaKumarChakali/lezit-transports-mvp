@@ -9,6 +9,21 @@ export interface CreateTripDto {
   date: string;
 }
 
+// Trip dates are calendar dates, not instants: a bare date ("2026-11-18")
+// parsed as midnight UTC shifts a day earlier when rendered in the
+// Americas. Store bare dates at noon UTC so the calendar date survives in
+// every timezone; full timestamps pass through unchanged.
+function parseTripDate(value: string): Date {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return new Date(`${value}T12:00:00.000Z`);
+  return new Date(value);
+}
+
+// Vehicle details shown with a trip (e.g. the driver dashboard's assigned
+// vehicle), so the frontend does not need a separate lookup.
+const vehicleInclude = {
+  vehicle: { select: { registrationNumber: true, make: true, model: true } },
+};
+
 @Injectable()
 export class TripsService {
   constructor(private readonly prisma: PrismaService) {}
@@ -28,21 +43,26 @@ export class TripsService {
       const driver = await this.prisma.user.findUnique({ where: { id: dto.driverId } });
       if (!driver || driver.role !== 'driver') throw new NotFoundException('Driver not found');
     }
-    return this.prisma.trip.create({ data: { ...dto, date: new Date(dto.date) } });
+    return this.prisma.trip.create({ data: { ...dto, date: parseTripDate(dto.date) } });
   }
 
   async list(userId: string, role: string) {
     if (role === 'driver') {
-      return this.prisma.trip.findMany({ where: { driverId: userId }, orderBy: { date: 'desc' } });
+      return this.prisma.trip.findMany({
+        where: { driverId: userId },
+        orderBy: { date: 'desc' },
+        include: vehicleInclude,
+      });
     }
     if (role === 'vehicle_owner') {
       const vehicles = await this.prisma.vehicle.findMany({ where: { ownerId: userId }, select: { id: true } });
       return this.prisma.trip.findMany({
         where: { vehicleId: { in: vehicles.map((v) => v.id) } },
         orderBy: { date: 'desc' },
+        include: vehicleInclude,
       });
     }
-    return this.prisma.trip.findMany({ orderBy: { date: 'desc' } });
+    return this.prisma.trip.findMany({ orderBy: { date: 'desc' }, include: vehicleInclude });
   }
 
   async get(id: string, userId: string, role: string) {

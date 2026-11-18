@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import DashboardCard from '@/components/DashboardCard';
 import { api, type AuthUser } from '@/lib/auth';
+import { formatDateOnly } from '@/lib/dates';
+import { assignedVehicleFromTrips, vehicleLabel } from '@/lib/trips';
 import type { ApiBooking, ApiProfile, ApiTrip } from '@/lib/api-types';
 
 export default function DriverDashboard() {
@@ -94,6 +96,10 @@ export default function DriverDashboard() {
     }
   }
 
+  // The assigned vehicle comes from the driver's trips (see lib/trips.ts):
+  // the vehicle of an in-progress trip first, then a scheduled one.
+  const assignedVehicle = assignedVehicleFromTrips(trips);
+
   return (
     <div>
       <h1>Driver Dashboard</h1>
@@ -104,7 +110,11 @@ export default function DriverDashboard() {
       <div className="grid">
         <DashboardCard title="Licence" value={licenceNumber || '—'} note="Driving licence information and expiry" />
         <DashboardCard title="Verification" value={me ? me.approvalStatus : '—'} note="Identity document uploads and verification status" />
-        <DashboardCard title="Assigned vehicle" value="—" note="No vehicle assigned yet — assignments arrive in Phase 2" />
+        <DashboardCard
+          title="Assigned vehicle"
+          value={assignedVehicle ? vehicleLabel(assignedVehicle) : '—'}
+          note={assignedVehicle ? 'Vehicle for your current trip' : 'No trips assigned yet — your vehicle will show here once a trip is assigned'}
+        />
         <DashboardCard title="Today's trips" value={loading ? '—' : String(trips.length)} note="Your assigned trips" />
       </div>
       <div className="card" style={{ marginTop: 16 }}>
@@ -112,7 +122,7 @@ export default function DriverDashboard() {
         {trips.length === 0 && <p className="muted">No trips assigned yet.</p>}
         {trips.map((t) => (
           <p key={t.id}>
-            {new Date(t.date).toLocaleDateString()} · {t.status}
+            {formatDateOnly(t.date)} · {t.status}
             {' '}
             {t.status === 'scheduled' && (
               <button className="btn" onClick={() => void tripAction(t.id, 'start')}>Start trip</button>

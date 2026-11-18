@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import DashboardCard from '@/components/DashboardCard';
 import { api, type AuthUser } from '@/lib/auth';
+import { formatDateOnly } from '@/lib/dates';
 import type { ApiDocument, ApiProfile, ApiSchedule, ApiTrip, ApiVehicle } from '@/lib/api-types';
 
 export default function OwnerDashboard() {
@@ -166,7 +167,7 @@ export default function OwnerDashboard() {
         ))}
         {trips.length === 0 && <p className="muted">No trips use your vehicles yet.</p>}
         {trips.map((t) => (
-          <p key={t.id}>{new Date(t.date).toLocaleDateString()} · {t.status}</p>
+          <p key={t.id}>{formatDateOnly(t.date)} · {t.status}</p>
         ))}
       </div>
 

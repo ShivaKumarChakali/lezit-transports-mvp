@@ -72,6 +72,9 @@ export interface ApiTrip {
   routeId: string;
   scheduleId?: string | null;
   vehicleId?: string | null;
+  // Vehicle details included with the trip (see TripsService.list), so the
+  // driver dashboard can show the assigned vehicle without another lookup.
+  vehicle?: { registrationNumber: string; make?: string | null; model?: string | null } | null;
   driverId?: string | null;
   date: string;
   status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
