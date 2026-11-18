@@ -1,19 +1,17 @@
 import Link from 'next/link';
 
-const ROLES = [
-  { name: 'Super Admin', text: 'Full control: approve users and vehicles, manage every account and see the whole operation.' },
-  { name: 'LEZIT Admin', text: 'Run the day to day: approvals, routes, schedules, bookings, trips and reports.' },
-  { name: 'Vehicle Owner', text: 'Register vehicles, upload documents, track approval and follow your schedules and trips.' },
-  { name: 'Driver', text: 'Keep your licence verified, see your trips, start them and check passengers in and out.' },
-  { name: 'Organization', text: 'Manage your profile and follow the routes and schedules that serve your people.' },
-  { name: 'Passenger', text: 'See your bookings and attendance, and know exactly when and where your trip runs.' },
+const AUDIENCES = [
+  { name: 'Organizations', text: 'Daily transport for your people — staff picked up on time and brought home safe, every working day.' },
+  { name: 'Vehicle owners', text: 'Put your vehicle to work on fixed routes with steady daily trips and clear trip records.' },
+  { name: 'Drivers', text: 'Steady daily trips on routes you know, with your licence verified and every trip recorded.' },
+  { name: 'Passengers', text: 'Book your seat in advance and know exactly when and where your vehicle picks you up.' },
 ];
 
 const STEPS = [
-  { n: '1', title: 'Register', text: 'Owners, drivers, organizations and passengers sign up in minutes.' },
-  { n: '2', title: 'Get approved', text: 'An admin reviews every account, vehicle and document before it goes live.' },
-  { n: '3', title: 'Plan routes', text: 'Admins create routes and schedules, and assign approved vehicles.' },
-  { n: '4', title: 'Run trips', text: 'Bookings fill seats, drivers start trips and check passengers in.' },
+  { n: '1', title: 'Share your routes', text: 'Tell us where your people are and when they need to travel.' },
+  { n: '2', title: 'We assign vehicles', text: 'Verified drivers and approved vehicles are matched to your routes.' },
+  { n: '3', title: 'Seats get booked', text: 'Your people book their seats in advance — no overcrowding, no confusion.' },
+  { n: '4', title: 'Trips run on time', text: 'Vehicles run to schedule and every trip and attendance is recorded.' },
 ];
 
 export default function HomePage() {
@@ -23,10 +21,10 @@ export default function HomePage() {
         <img src="/lezit-logo-removebg-preview.png" alt="LEZIT Transports" />
         <nav className="home-nav" aria-label="Sections">
           <a href="#how-it-works">How it works</a>
-          <a href="#roles">Roles</a>
-          <a href="#operations">Operations</a>
+          <a href="#who-we-serve">Who we serve</a>
+          <a href="#what-you-get">What you get</a>
         </nav>
-        <span style={{ marginLeft: 'auto' }}>
+        <span className="home-auth">
           <Link href="/login" className="btn" style={{ marginRight: 8 }}>Log in</Link>
           <Link href="/register" className="btn btn-secondary">Register</Link>
         </span>
@@ -37,23 +35,23 @@ export default function HomePage() {
         <section className="home-hero">
           <div className="home-hero-inner">
             <div className="home-hero-copy">
-              <p className="home-pill">Live now &middot; routes, schedules, bookings &amp; trips</p>
-              <h1>Every vehicle.<br />Every trip.<br /><span>One platform.</span></h1>
+              <p className="home-pill">LEZIT Transports &middot; Daily transport services</p>
+              <h1>Your people, picked up on time, <span>every day.</span></h1>
               <p className="home-lede">
-                LEZIT Transports brings vehicle owners, drivers, organizations and
-                passengers together &mdash; register, get approved, plan routes and
-                run daily trips from a single dashboard.
+                LEZIT runs daily transport for organizations &mdash; verified drivers,
+                well-kept vehicles, planned routes and seats booked in advance,
+                so your people get to work and home safely, on time.
               </p>
               <p className="home-cta-row">
-                <Link href="/login" className="btn home-cta">Go to your dashboard</Link>
-                <Link href="/register" className="btn btn-outline">Register an account</Link>
+                <Link href="/register" className="btn home-cta">Get started</Link>
+                <Link href="/login" className="btn btn-outline">Log in</Link>
               </p>
-              <p className="home-trust">6 role dashboards &middot; approvals built in &middot; no app to install</p>
+              <p className="home-trust">Verified drivers &middot; Planned routes &middot; Seats booked in advance</p>
             </div>
-            <div className="home-mock" aria-label="Preview of daily operations">
+            <div className="home-mock" aria-label="Example of a day's transport">
               <div className="home-mock-head">
-                <span>Today&rsquo;s operations</span>
-                <span className="badge badge-success">Live</span>
+                <span>Today&rsquo;s transport</span>
+                <span className="badge badge-success">Running</span>
               </div>
               <div className="home-mock-row">
                 <div><span className="home-mock-label">Route</span><strong>City Centre &rarr; Airport</strong></div>
@@ -61,10 +59,10 @@ export default function HomePage() {
               </div>
               <div className="home-mock-row">
                 <div><span className="home-mock-label">Vehicle</span><strong>LEZIT-101 &middot; 12 seats</strong></div>
-                <span className="badge badge-success">Approved</span>
+                <span className="badge badge-success">On the road</span>
               </div>
               <div className="home-mock-row">
-                <div><span className="home-mock-label">Booking</span><strong>8 seats booked</strong></div>
+                <div><span className="home-mock-label">Seats</span><strong>8 seats booked</strong></div>
                 <span className="badge badge-warn">Trip started</span>
               </div>
               <div className="home-mock-bar"><span style={{ width: '67%' }} /></div>
@@ -73,18 +71,18 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Stats strip */}
-        <section className="container home-stats" aria-label="What the platform covers">
-          <div className="card stat-card"><h3>Role dashboards</h3><p className="stat-value">6</p><p>One dashboard per role, each seeing only what it needs.</p></div>
-          <div className="card stat-card"><h3>Steps to a trip</h3><p className="stat-value">4</p><p>Register, approve, plan the route, run the trip.</p></div>
-          <div className="card stat-card"><h3>Operations</h3><p className="stat-value">Live</p><p>Routes, schedules, bookings, trips and attendance.</p></div>
-          <div className="card stat-card"><h3>Approvals</h3><p className="stat-value">Built in</p><p>Every account and vehicle is reviewed before it goes live.</p></div>
+        {/* Why LEZIT */}
+        <section className="container home-stats" aria-label="Why LEZIT">
+          <div className="card feature-card"><h3>Verified drivers</h3><p>Licences checked and vehicles approved before any trip runs.</p></div>
+          <div className="card feature-card"><h3>Routes planned around you</h3><p>Pick-up points and timings set to fit your people, not the other way round.</p></div>
+          <div className="card feature-card"><h3>Seats booked in advance</h3><p>Every passenger has a booked seat, so nobody is left standing.</p></div>
+          <div className="card feature-card"><h3>Every trip tracked</h3><p>Trips and attendance recorded, so you always know what ran and who travelled.</p></div>
         </section>
 
         {/* How it works */}
         <section id="how-it-works" className="container home-section">
           <p className="eyebrow">How it works</p>
-          <h2>From sign-up to wheels rolling, in four steps</h2>
+          <h2>From your routes to wheels rolling, in four steps</h2>
           <div className="home-steps">
             {STEPS.map((s) => (
               <div key={s.n} className="card home-step">
@@ -96,31 +94,31 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Roles */}
-        <section id="roles" className="container home-section">
-          <p className="eyebrow">Who it is for</p>
-          <h2>One platform, a dashboard for every role</h2>
+        {/* Who we serve */}
+        <section id="who-we-serve" className="container home-section">
+          <p className="eyebrow">Who we serve</p>
+          <h2>Transport that works for everyone on the road</h2>
           <div className="grid home-roles">
-            {ROLES.map((r) => (
-              <div key={r.name} className="card feature-card">
-                <h3>{r.name}</h3>
-                <p>{r.text}</p>
+            {AUDIENCES.map((a) => (
+              <div key={a.name} className="card feature-card">
+                <h3>{a.name}</h3>
+                <p>{a.text}</p>
               </div>
             ))}
           </div>
         </section>
 
-        {/* Operations */}
-        <section id="operations" className="home-ops">
+        {/* What you get */}
+        <section id="what-you-get" className="home-ops">
           <div className="container home-ops-inner">
             <div>
-              <p className="eyebrow">Daily operations</p>
-              <h2>Everything a transport day needs</h2>
+              <p className="eyebrow">What you get</p>
+              <h2>A transport service you can rely on</h2>
               <ul className="home-ops-list">
-                <li><strong>Routes &amp; schedules</strong> &mdash; plan where vehicles run and when.</li>
-                <li><strong>Bookings</strong> &mdash; fill seats with capacity checked automatically.</li>
-                <li><strong>Trips &amp; attendance</strong> &mdash; drivers start trips and check passengers in.</li>
-                <li><strong>Reports</strong> &mdash; users, vehicles, bookings and trips at a glance.</li>
+                <li><strong>On-time pick-ups</strong> &mdash; fixed routes and timings your people can plan around.</li>
+                <li><strong>Seats for everyone</strong> &mdash; bookings keep every vehicle within its capacity.</li>
+                <li><strong>Attendance records</strong> &mdash; know who travelled on every trip.</li>
+                <li><strong>Clear reports</strong> &mdash; trips, bookings and vehicles, all in one place.</li>
               </ul>
             </div>
             <img className="home-ops-art" src="/image-removebg-preview.png" alt="Air, road, rail and sea transport" />
@@ -130,8 +128,8 @@ export default function HomePage() {
         {/* CTA */}
         <section className="container">
           <div className="home-cta-banner">
-            <h2>Ready to run your transport operations?</h2>
-            <p>Create an account, get approved, and start planning routes today.</p>
+            <h2>Get your daily transport running with LEZIT</h2>
+            <p>Create an account, and we will get your routes, vehicles and people moving.</p>
             <p>
               <Link href="/register" className="btn home-cta">Register now</Link>
               <Link href="/login" className="btn btn-outline-light" style={{ marginLeft: 12 }}>Log in</Link>
@@ -142,7 +140,7 @@ export default function HomePage() {
 
       <footer className="home-footer">
         <div className="container home-footer-inner">
-          <span><strong>LEZIT Transports</strong> &middot; Transportation Management System</span>
+          <span><strong>LEZIT Transports</strong> &middot; Daily transport services</span>
           <span>
             <Link href="/login">Log in</Link>
             {' · '}

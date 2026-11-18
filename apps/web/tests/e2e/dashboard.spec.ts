@@ -8,7 +8,7 @@ test('dashboard redirects unauthenticated users to login', async ({ page }) => {
 
 test('home page loads and links to login', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'LEZIT Transports' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Your people, picked up on time, every day.' })).toBeVisible();
   await page.getByRole('link', { name: 'Log in' }).first().click();
   await expect(page).toHaveURL(/\/login$/);
 });
