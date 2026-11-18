@@ -1,0 +1,20 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: lezit-postgres
+    environment:
+      POSTGRES_USER: lezit
+      POSTGRES_PASSWORD: lezit_dev_password
+      POSTGRES_DB: lezit_mvp
+    ports:
+      - "5432:5432"
+    volumes:
+      - lezit_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lezit -d lezit_mvp"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  lezit_pgdata:

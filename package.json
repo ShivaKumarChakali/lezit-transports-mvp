@@ -1,0 +1,25 @@
+{
+  "description": "LEZIT Transportation Management System MVP — React/Next.js frontend, NestJS backend, PostgreSQL.",
+  "name": "lezit-transports-mvp",
+  "private": true,
+  "scripts": {
+    "build": "npm run build:api && npm run build:web",
+    "build:api": "npm run build --workspace=apps/api",
+    "build:web": "npm run build --workspace=apps/web",
+    "db:down": "docker compose down",
+    "db:generate": "npm run prisma:generate --workspace=apps/api",
+    "db:migrate": "npm run prisma:migrate --workspace=apps/api",
+    "db:up": "docker compose up -d db",
+    "dev:api": "npm run start:dev --workspace=apps/api",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "lint": "npm run lint --workspace=apps/api && npm run lint --workspace=apps/web",
+    "test": "npm run test --workspace=apps/api && npm run test --workspace=apps/web",
+    "test:ui": "npm run test:ui --workspace=apps/web",
+    "typecheck": "npm run typecheck --workspace=apps/api && npm run typecheck --workspace=apps/web"
+  },
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}

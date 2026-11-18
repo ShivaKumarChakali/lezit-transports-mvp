@@ -1,0 +1,33 @@
+{
+  "dependencies": {
+    "next": "14.2.35",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.1",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^14.3.1",
+    "@types/node": "^20.11.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^14.2.35",
+    "jsdom": "^25.0.1",
+    "typescript": "^5.5.0",
+    "vitest": "^2.1.9"
+  },
+  "name": "@lezit/web",
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "vitest run",
+    "test:ui": "playwright test",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "version": "0.1.0"
+}

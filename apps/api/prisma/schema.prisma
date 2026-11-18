@@ -1,0 +1,136 @@
+// LEZIT Transport MVP — Phase 1 data model (PostgreSQL, Prisma)
+// Phase 2 will add Route, Schedule, Booking, Trip, Attendance, Report models.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  super_admin
+  lezit_admin
+  vehicle_owner
+  driver
+  organization
+  passenger
+}
+
+enum ApprovalStatus {
+  pending
+  approved
+  rejected
+}
+
+enum AccountStatus {
+  active
+  inactive
+}
+
+model User {
+  id             String         @id @default(uuid())
+  email          String         @unique
+  passwordHash   String
+  name           String
+  phone          String?
+  role           Role
+  approvalStatus ApprovalStatus @default(pending)
+  status         AccountStatus  @default(active)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  ownerProfile     VehicleOwnerProfile?
+  driverProfile    DriverProfile?
+  orgProfile       OrganizationProfile?
+  passengerProfile PassengerProfile?
+  documents        Document[]
+  vehicles         Vehicle[]            @relation("OwnerVehicles")
+
+  @@map("users")
+}
+
+model VehicleOwnerProfile {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessName String
+  gstNumber    String?
+  address      String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("vehicle_owner_profiles")
+}
+
+model DriverProfile {
+  id            String    @id @default(uuid())
+  userId        String    @unique
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  licenceNumber String    @unique
+  licenceExpiry DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("driver_profiles")
+}
+
+model OrganizationProfile {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orgName       String
+  contactPerson String?
+  address       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("organization_profiles")
+}
+
+model PassengerProfile {
+  id         String   @id @default(uuid())
+  userId     String   @unique
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  employeeId String?
+  orgId      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("passenger_profiles")
+}
+
+model Vehicle {
+  id                 String         @id @default(uuid())
+  ownerId            String
+  owner              User           @relation("OwnerVehicles", fields: [ownerId], references: [id], onDelete: Cascade)
+  registrationNumber String         @unique
+  make               String?
+  model              String?
+  year               Int?
+  seatCapacity       Int?
+  approvalStatus     ApprovalStatus @default(pending)
+  status             AccountStatus  @default(active)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  @@map("vehicles")
+}
+
+// Document uploads: metadata only in Phase 1. No file storage is wired up yet;
+// fileUrl is a placeholder for the storage location once a provider is chosen.
+model Document {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fileName     String
+  fileUrl      String?
+  fileType     String?
+  documentKind String?
+  verified     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  @@map("documents")
+}
