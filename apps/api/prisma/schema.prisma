@@ -1,5 +1,6 @@
-// LEZIT Transport MVP — Phase 1 data model (PostgreSQL, Prisma)
-// Phase 2 will add Route, Schedule, Booking, Trip, Attendance, Report models.
+// LEZIT Transport MVP — data model (PostgreSQL, Prisma)
+// Phase 1: users, profiles, vehicles, documents.
+// Phase 2: routes, schedules, bookings, trips, attendance.
 
 generator client {
   provider = "prisma-client-js"
@@ -48,6 +49,10 @@ model User {
   passengerProfile PassengerProfile?
   documents        Document[]
   vehicles         Vehicle[]            @relation("OwnerVehicles")
+  schedulesAsDriver Schedule[]          @relation("ScheduleDriver")
+  tripsAsDriver     Trip[]               @relation("TripDriver")
+  bookingsAsPassenger Booking[]          @relation("BookingPassenger")
+  attendanceAsPassenger Attendance[]     @relation("AttendancePassenger")
 
   @@map("users")
 }
@@ -116,6 +121,9 @@ model Vehicle {
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
 
+  schedules Schedule[]
+  trips     Trip[]
+
   @@map("vehicles")
 }
 
@@ -133,4 +141,120 @@ model Document {
   createdAt    DateTime @default(now())
 
   @@map("documents")
+}
+
+enum BookingStatus {
+  pending
+  confirmed
+  cancelled
+  completed
+}
+
+enum TripStatus {
+  scheduled
+  in_progress
+  completed
+  cancelled
+}
+
+enum AttendanceStatus {
+  checked_in
+  checked_out
+  absent
+}
+
+model Route {
+  id            String   @id @default(uuid())
+  name          String
+  startLocation String
+  endLocation   String
+  stops         String[] @default([])
+  createdById   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  schedules Schedule[]
+  bookings  Booking[]
+  trips     Trip[]
+
+  @@map("routes")
+}
+
+model Schedule {
+  id            String   @id @default(uuid())
+  routeId       String
+  route         Route    @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  vehicleId     String?
+  vehicle       Vehicle? @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  driverId      String?
+  driver        User?    @relation("ScheduleDriver", fields: [driverId], references: [id], onDelete: SetNull)
+  departureTime String
+  days          String[] @default([])
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  bookings Booking[]
+  trips    Trip[]
+
+  @@map("schedules")
+}
+
+model Booking {
+  id          String        @id @default(uuid())
+  passengerId String
+  passenger   User          @relation("BookingPassenger", fields: [passengerId], references: [id], onDelete: Cascade)
+  routeId     String
+  route       Route         @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  scheduleId  String?
+  schedule    Schedule?     @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
+  seats       Int           @default(1)
+  status      BookingStatus @default(confirmed)
+  createdById String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  attendance Attendance[]
+
+  @@map("bookings")
+}
+
+model Trip {
+  id          String     @id @default(uuid())
+  routeId     String
+  route       Route      @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  scheduleId  String?
+  schedule    Schedule?  @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
+  vehicleId   String?
+  vehicle     Vehicle?   @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  driverId    String?
+  driver      User?      @relation("TripDriver", fields: [driverId], references: [id], onDelete: SetNull)
+  date        DateTime
+  status      TripStatus @default(scheduled)
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  attendance Attendance[]
+
+  @@map("trips")
+}
+
+model Attendance {
+  id          String           @id @default(uuid())
+  tripId      String
+  trip        Trip             @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  bookingId   String?
+  booking     Booking?         @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  passengerId String
+  passenger   User             @relation("AttendancePassenger", fields: [passengerId], references: [id], onDelete: Cascade)
+  status      AttendanceStatus @default(checked_in)
+  checkInAt   DateTime         @default(now())
+  checkOutAt  DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@unique([tripId, passengerId])
+  @@map("attendance")
 }
