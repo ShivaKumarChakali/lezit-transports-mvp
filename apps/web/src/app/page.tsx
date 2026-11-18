@@ -13,7 +13,8 @@ export default function HomePage() {
       <main className="container">
         <section className="hero">
           <div style={{ flex: 1, minWidth: 260 }}>
-            <h1 style={{ fontSize: 36, margin: '0 0 12px' }}>LEZIT Transports</h1>
+            <p className="eyebrow">Transportation Management System</p>
+            <h1>LEZIT Transports</h1>
             <p style={{ color: '#eadfb8' }}>
               One platform to register vehicle owners, manage drivers and vehicles,
               create routes, schedule trips, allocate passengers and monitor daily
@@ -25,10 +26,10 @@ export default function HomePage() {
           </div>
           <img className="hero-art" src="/image-removebg-preview.png" alt="Air, road, rail and sea transport" />
         </section>
-        <div className="grid">
-          <div className="card"><h3>Vehicle owners</h3><p>Register, upload documents and track approval status.</p></div>
-          <div className="card"><h3>Drivers &amp; vehicles</h3><p>Licences, vehicle records and verification in one place.</p></div>
-          <div className="card"><h3>Routes &amp; trips</h3><p>Phase 2: routes, schedules, bookings and attendance.</p></div>
+        <div className="grid" style={{ marginTop: 20 }}>
+          <div className="card feature-card"><h3>Vehicle owners</h3><p>Register, upload documents and track approval status.</p></div>
+          <div className="card feature-card"><h3>Drivers &amp; vehicles</h3><p>Licences, vehicle records and verification in one place.</p></div>
+          <div className="card feature-card"><h3>Routes &amp; trips</h3><p>Phase 2: routes, schedules, bookings and attendance.</p></div>
         </div>
       </main>
     </div>

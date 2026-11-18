@@ -25,19 +25,23 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="container" style={{ maxWidth: 480 }}>
-      <div className="card" style={{ marginTop: 48 }}>
-        <img src="/lezit-logo-removebg-preview.png" alt="LEZIT Transports" style={{ width: 180, background: '#111', padding: 12, borderRadius: 8 }} />
-        <h1>Log in</h1>
-        <form onSubmit={onSubmit}>
-          <label className="label" htmlFor="email">Email</label>
-          <input id="email" className="input" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-          <label className="label" htmlFor="password">Password</label>
-          <input id="password" className="input" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
-          {error && <p className="error">{error}</p>}
-          <button className="btn" type="submit" style={{ width: '100%' }}>Log in</button>
-        </form>
-        <p className="muted">No account? <Link href="/register" style={{ color: '#b8932b', fontWeight: 600 }}>Register</Link></p>
+    <main className="auth-page">
+      <div className="auth-card">
+        <div className="auth-brand">
+          <img src="/lezit-logo-removebg-preview.png" alt="LEZIT Transports" />
+        </div>
+        <div className="card">
+          <h1>Log in</h1>
+          <form onSubmit={onSubmit}>
+            <label className="label" htmlFor="email">Email</label>
+            <input id="email" className="input" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+            <label className="label" htmlFor="password">Password</label>
+            <input id="password" className="input" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+            {error && <p className="error">{error}</p>}
+            <button className="btn" type="submit" style={{ width: '100%' }}>Log in</button>
+          </form>
+          <p className="muted">No account? <Link href="/register" style={{ color: '#b8932b', fontWeight: 600 }}>Register</Link></p>
+        </div>
       </div>
     </main>
   );

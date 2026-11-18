@@ -35,16 +35,18 @@ export default function Sidebar() {
             {item.label}
           </Link>
         ))}
-        <a
-          href="#"
-          onClick={(e) => {
-            e.preventDefault();
-            clearAuth();
-            router.push('/login');
-          }}
-        >
-          Log out
-        </a>
+        <span className="nav-logout">
+          <button
+            type="button"
+            className="nav-link"
+            onClick={() => {
+              clearAuth();
+              router.push('/login');
+            }}
+          >
+            Log out
+          </button>
+        </span>
       </nav>
     </aside>
   );

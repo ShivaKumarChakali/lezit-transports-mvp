@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import DashboardCard from '@/components/DashboardCard';
 import OperationsPanel from '@/components/OperationsPanel';
+import PageHeader from '@/components/PageHeader';
+import StatusBadge from '@/components/StatusBadge';
 import { api } from '@/lib/auth';
 import type { ApiUser, ApiVehicle } from '@/lib/api-types';
 
@@ -57,8 +59,7 @@ export default function AdminDashboard({ title, subtitle }: { title: string; sub
 
   return (
     <div>
-      <h1>{title}</h1>
-      <p className="muted">{subtitle}</p>
+      <PageHeader title={title} subtitle={subtitle} />
       {loading && <p className="muted">Loading…</p>}
       {error && <p className="error">{error}</p>}
       <div className="grid">
@@ -68,63 +69,74 @@ export default function AdminDashboard({ title, subtitle }: { title: string; sub
         <DashboardCard title="Pending approvals" value={loading ? '—' : String(pendingUsers.length + pendingVehicles.length)} note="Approve or reject registration requests" />
       </div>
 
-      <div className="card" style={{ marginTop: 16 }}>
+      <div className="card section">
         <h3>Pending user approvals</h3>
         {pendingUsers.length === 0 && <p className="muted">No users waiting for approval.</p>}
-        {pendingUsers.map((u) => (
-          <p key={u.id}>
-            {u.name} · {u.email} · {u.role}
-            {' '}
-            <button className="btn" disabled={!!busy} onClick={() => void act(`approve-${u.id}`, () => api(`/users/${u.id}/approval`, { method: 'PATCH', body: JSON.stringify({ approvalStatus: 'approved' }) }))}>
-              Approve
-            </button>
-            {' '}
-            <button className="btn btn-secondary" disabled={!!busy} onClick={() => void act(`reject-${u.id}`, () => api(`/users/${u.id}/approval`, { method: 'PATCH', body: JSON.stringify({ approvalStatus: 'rejected' }) }))}>
-              Reject
-            </button>
-          </p>
-        ))}
+        <div className="row-list">
+          {pendingUsers.map((u) => (
+            <div className="row" key={u.id}>
+              <span className="row-text">{u.name} · {u.email} · {u.role}</span>
+              <span className="row-actions">
+                <button className="btn" disabled={!!busy} onClick={() => void act(`approve-${u.id}`, () => api(`/users/${u.id}/approval`, { method: 'PATCH', body: JSON.stringify({ approvalStatus: 'approved' }) }))}>
+                  Approve
+                </button>
+                <button className="btn btn-secondary" disabled={!!busy} onClick={() => void act(`reject-${u.id}`, () => api(`/users/${u.id}/approval`, { method: 'PATCH', body: JSON.stringify({ approvalStatus: 'rejected' }) }))}>
+                  Reject
+                </button>
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div className="card" style={{ marginTop: 16 }}>
+      <div className="card section">
         <h3>Pending vehicle approvals</h3>
         {pendingVehicles.length === 0 && <p className="muted">No vehicles waiting for approval.</p>}
-        {pendingVehicles.map((v) => (
-          <p key={v.id}>
-            {v.registrationNumber} {v.make ? `· ${v.make} ${v.model ?? ''}` : ''}
-            {' '}
-            <button className="btn" disabled={!!busy} onClick={() => void act(`vapprove-${v.id}`, () => api(`/vehicles/${v.id}/approval`, { method: 'PATCH', body: JSON.stringify({ approvalStatus: 'approved' }) }))}>
-              Approve
-            </button>
-            {' '}
-            <button className="btn btn-secondary" disabled={!!busy} onClick={() => void act(`vreject-${v.id}`, () => api(`/vehicles/${v.id}/approval`, { method: 'PATCH', body: JSON.stringify({ approvalStatus: 'rejected' }) }))}>
-              Reject
-            </button>
-          </p>
-        ))}
+        <div className="row-list">
+          {pendingVehicles.map((v) => (
+            <div className="row" key={v.id}>
+              <span className="row-text">
+                {v.registrationNumber} {v.make ? `· ${v.make} ${v.model ?? ''}` : ''}
+              </span>
+              <span className="row-actions">
+                <button className="btn" disabled={!!busy} onClick={() => void act(`vapprove-${v.id}`, () => api(`/vehicles/${v.id}/approval`, { method: 'PATCH', body: JSON.stringify({ approvalStatus: 'approved' }) }))}>
+                  Approve
+                </button>
+                <button className="btn btn-secondary" disabled={!!busy} onClick={() => void act(`vreject-${v.id}`, () => api(`/vehicles/${v.id}/approval`, { method: 'PATCH', body: JSON.stringify({ approvalStatus: 'rejected' }) }))}>
+                  Reject
+                </button>
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div className="card" style={{ marginTop: 16 }}>
+      <div className="card section">
         <h3>Accounts</h3>
         {users.length === 0 && <p className="muted">No accounts yet.</p>}
-        {users.map((u) => (
-          <p key={u.id}>
-            {u.name} · {u.email} · {u.role} · {u.approvalStatus} · {u.status}
-            {' '}
-            <button
-              className="btn btn-secondary"
-              disabled={!!busy}
-              onClick={() => void act(`status-${u.id}`, () =>
-                api(`/users/${u.id}/status`, {
-                  method: 'PATCH',
-                  body: JSON.stringify({ status: u.status === 'active' ? 'inactive' : 'active' }),
-                }),
-              )}
-            >
-              {u.status === 'active' ? 'Deactivate' : 'Activate'}
-            </button>
-          </p>
-        ))}
+        <div className="row-list">
+          {users.map((u) => (
+            <div className="row" key={u.id}>
+              <span className="row-text">{u.name} · {u.email} · {u.role}</span>
+              <StatusBadge status={u.approvalStatus} />
+              <StatusBadge status={u.status} />
+              <span className="row-actions">
+                <button
+                  className="btn btn-secondary"
+                  disabled={!!busy}
+                  onClick={() => void act(`status-${u.id}`, () =>
+                    api(`/users/${u.id}/status`, {
+                      method: 'PATCH',
+                      body: JSON.stringify({ status: u.status === 'active' ? 'inactive' : 'active' }),
+                    }),
+                  )}
+                >
+                  {u.status === 'active' ? 'Deactivate' : 'Activate'}
+                </button>
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
 
       <OperationsPanel />

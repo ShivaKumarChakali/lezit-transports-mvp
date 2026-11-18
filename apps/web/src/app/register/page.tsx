@@ -31,10 +31,14 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="container" style={{ maxWidth: 480 }}>
-      <div className="card" style={{ marginTop: 48 }}>
-        <h1>Register</h1>
-        <p className="muted">New accounts start as pending approval. An admin approves owner, driver and vehicle records.</p>
+    <main className="auth-page">
+      <div className="auth-card">
+        <div className="auth-brand">
+          <img src="/lezit-logo-removebg-preview.png" alt="LEZIT Transports" />
+        </div>
+        <div className="card">
+          <h1>Register</h1>
+          <p className="muted">New accounts start as pending approval. An admin approves owner, driver and vehicle records.</p>
         <form onSubmit={onSubmit}>
           <label className="label" htmlFor="name">Full name</label>
           <input id="name" className="input" required value={name} onChange={(e) => setName(e.target.value)} />
@@ -59,6 +63,7 @@ export default function RegisterPage() {
           </p>
         )}
         <p className="muted">Already have an account? <Link href="/login" style={{ color: '#b8932b', fontWeight: 600 }}>Log in</Link></p>
+        </div>
       </div>
     </main>
   );

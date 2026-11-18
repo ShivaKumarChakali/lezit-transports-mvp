@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import DashboardCard from '@/components/DashboardCard';
+import StatusBadge from '@/components/StatusBadge';
 import { api } from '@/lib/auth';
 import { formatDateOnly } from '@/lib/dates';
 import type { ApiBooking, ApiRoute, ApiSchedule, ApiTrip, ApiUser, ApiVehicle } from '@/lib/api-types';
@@ -109,10 +110,10 @@ export default function OperationsPanel() {
 
   return (
     <div>
-      <h2 style={{ marginTop: 24 }}>Operations — Phase 2</h2>
+      <h2 className="section">Operations — Phase 2</h2>
       {loading && <p className="muted">Loading…</p>}
       {error && <p className="error">{error}</p>}
-      {notice && <p>{notice}</p>}
+      {notice && <p className="notice">{notice}</p>}
       <div className="grid">
         <DashboardCard title="Routes" value={loading ? '—' : String(routes.length)} note="Created routes with pickup / drop locations" />
         <DashboardCard title="Schedules" value={loading ? '—' : String(schedules.filter((s) => s.active).length)} note="Active schedules" />
@@ -120,7 +121,7 @@ export default function OperationsPanel() {
         <DashboardCard title="Trips" value={loading ? '—' : String(trips.length)} note="Scheduled, in progress and completed trips" />
       </div>
 
-      <div className="card" style={{ marginTop: 16 }}>
+      <div className="card section">
         <h3>Basic operational report</h3>
         {report ? (
           <p>
@@ -133,16 +134,20 @@ export default function OperationsPanel() {
         )}
       </div>
 
-      <div className="card" style={{ marginTop: 16 }}>
+      <div className="card section">
         <h3>Routes</h3>
         {routes.length === 0 && <p className="muted">No routes yet.</p>}
-        {routes.map((r) => (
-          <p key={r.id}>
-            {r.name} · {r.startLocation} → {r.endLocation}
-            {r.stops.length > 0 ? ` · stops: ${r.stops.join(', ')}` : ''}
-          </p>
-        ))}
-        <form
+        <div className="row-list">
+          {routes.map((r) => (
+            <div className="row" key={r.id}>
+              <span className="row-text">
+                {r.name} · {r.startLocation} → {r.endLocation}
+                {r.stops.length > 0 ? ` · stops: ${r.stops.join(', ')}` : ''}
+              </span>
+            </div>
+          ))}
+        </div>
+        <form className="form-block"
           onSubmit={(e) =>
             void submit(e, () =>
               api('/routes', {
@@ -171,15 +176,18 @@ export default function OperationsPanel() {
         </form>
       </div>
 
-      <div className="card" style={{ marginTop: 16 }}>
+      <div className="card section">
         <h3>Schedules</h3>
         {schedules.length === 0 && <p className="muted">No schedules yet.</p>}
-        {schedules.map((s) => (
-          <p key={s.id}>
-            {s.departureTime} · {s.days.join(', ') || 'no days set'} · {s.active ? 'active' : 'inactive'}
-          </p>
-        ))}
-        <form
+        <div className="row-list">
+          {schedules.map((s) => (
+            <div className="row" key={s.id}>
+              <span className="row-text">{s.departureTime} · {s.days.join(', ') || 'no days set'}</span>
+              <StatusBadge status={s.active ? 'active' : 'inactive'} />
+            </div>
+          ))}
+        </div>
+        <form className="form-block"
           onSubmit={(e) =>
             void submit(e, () =>
               api('/schedules', {
@@ -226,27 +234,31 @@ export default function OperationsPanel() {
         </form>
       </div>
 
-      <div className="card" style={{ marginTop: 16 }}>
+      <div className="card section">
         <h3>Manual bookings</h3>
         {bookings.length === 0 && <p className="muted">No bookings yet.</p>}
-        {bookings.map((b) => (
-          <p key={b.id}>
-            {b.seats} seat(s) · {b.status}
-            {' '}
-            {b.status === 'confirmed' && (
-              <button
-                className="btn btn-secondary"
-                onClick={() => void act(() =>
-                  api(`/bookings/${b.id}/status`, { method: 'PATCH', body: JSON.stringify({ status: 'cancelled' }) }),
-                  'Booking cancelled.',
-                )}
-              >
-                Cancel
-              </button>
-            )}
-          </p>
-        ))}
-        <form
+        <div className="row-list">
+          {bookings.map((b) => (
+            <div className="row" key={b.id}>
+              <span className="row-text">{b.seats} seat(s)</span>
+              <StatusBadge status={b.status} />
+              {b.status === 'confirmed' && (
+                <span className="row-actions">
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => void act(() =>
+                      api(`/bookings/${b.id}/status`, { method: 'PATCH', body: JSON.stringify({ status: 'cancelled' }) }),
+                      'Booking cancelled.',
+                    )}
+                  >
+                    Cancel
+                  </button>
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+        <form className="form-block"
           onSubmit={(e) =>
             void submit(e, () =>
               api('/bookings', {
@@ -290,15 +302,18 @@ export default function OperationsPanel() {
         </form>
       </div>
 
-      <div className="card" style={{ marginTop: 16 }}>
+      <div className="card section">
         <h3>Trips</h3>
         {trips.length === 0 && <p className="muted">No trips yet.</p>}
-        {trips.map((t) => (
-          <p key={t.id}>
-            {formatDateOnly(t.date)} · {t.status}
-          </p>
-        ))}
-        <form
+        <div className="row-list">
+          {trips.map((t) => (
+            <div className="row" key={t.id}>
+              <span className="row-text">{formatDateOnly(t.date)}</span>
+              <StatusBadge status={t.status} />
+            </div>
+          ))}
+        </div>
+        <form className="form-block"
           onSubmit={(e) =>
             void submit(e, () =>
               api('/trips', {

@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import DashboardCard from '@/components/DashboardCard';
+import PageHeader from '@/components/PageHeader';
+import StatusBadge from '@/components/StatusBadge';
 import { api, type AuthUser } from '@/lib/auth';
 import { formatDateOnly } from '@/lib/dates';
 import { assignedVehicleFromTrips, vehicleLabel } from '@/lib/trips';
@@ -102,11 +104,10 @@ export default function DriverDashboard() {
 
   return (
     <div>
-      <h1>Driver Dashboard</h1>
-      <p className="muted">Profile, driving licence, identity documents and verification status.</p>
+      <PageHeader title="Driver Dashboard" subtitle="Profile, driving licence, identity documents and verification status." />
       {loading && <p className="muted">Loading…</p>}
       {error && <p className="error">{error}</p>}
-      {notice && <p>{notice}</p>}
+      {notice && <p className="notice">{notice}</p>}
       <div className="grid">
         <DashboardCard title="Licence" value={licenceNumber || '—'} note="Driving licence information and expiry" />
         <DashboardCard title="Verification" value={me ? me.approvalStatus : '—'} note="Identity document uploads and verification status" />
@@ -117,41 +118,46 @@ export default function DriverDashboard() {
         />
         <DashboardCard title="Today's trips" value={loading ? '—' : String(trips.length)} note="Your assigned trips" />
       </div>
-      <div className="card" style={{ marginTop: 16 }}>
+      <div className="card section">
         <h3>My trips</h3>
         {trips.length === 0 && <p className="muted">No trips assigned yet.</p>}
-        {trips.map((t) => (
-          <p key={t.id}>
-            {formatDateOnly(t.date)} · {t.status}
-            {' '}
-            {t.status === 'scheduled' && (
-              <button className="btn" onClick={() => void tripAction(t.id, 'start')}>Start trip</button>
-            )}
-            {' '}
-            {t.status === 'in_progress' && (
-              <button className="btn" onClick={() => void tripAction(t.id, 'complete')}>Complete trip</button>
-            )}
-            {' '}
-            <button className="btn btn-secondary" onClick={() => void loadTripBookings(t.id)}>Passengers</button>
-          </p>
-        ))}
+        <div className="row-list">
+          {trips.map((t) => (
+            <div className="row" key={t.id}>
+              <span className="row-text">{formatDateOnly(t.date)}</span>
+              <StatusBadge status={t.status} />
+              <span className="row-actions">
+                {t.status === 'scheduled' && (
+                  <button className="btn" onClick={() => void tripAction(t.id, 'start')}>Start trip</button>
+                )}
+                {t.status === 'in_progress' && (
+                  <button className="btn" onClick={() => void tripAction(t.id, 'complete')}>Complete trip</button>
+                )}
+                <button className="btn btn-secondary" onClick={() => void loadTripBookings(t.id)}>Passengers</button>
+              </span>
+            </div>
+          ))}
+        </div>
         {activeTripId && (
-          <div style={{ marginTop: 12 }}>
+          <div className="form-block">
             <h3>Passengers on this trip</h3>
             {tripBookings.length === 0 && <p className="muted">No bookings on this trip.</p>}
-            {tripBookings.map((b) => (
-              <p key={b.id}>
-                {b.seats} seat(s) · {b.status}
-                {' '}
-                <button className="btn" onClick={() => void attendance(activeTripId, b.passengerId, b.id, 'check-in')}>Check in</button>
-                {' '}
-                <button className="btn btn-secondary" onClick={() => void attendance(activeTripId, b.passengerId, b.id, 'check-out')}>Check out</button>
-              </p>
-            ))}
+            <div className="row-list">
+              {tripBookings.map((b) => (
+                <div className="row" key={b.id}>
+                  <span className="row-text">{b.seats} seat(s)</span>
+                  <StatusBadge status={b.status} />
+                  <span className="row-actions">
+                    <button className="btn" onClick={() => void attendance(activeTripId, b.passengerId, b.id, 'check-in')}>Check in</button>
+                    <button className="btn btn-secondary" onClick={() => void attendance(activeTripId, b.passengerId, b.id, 'check-out')}>Check out</button>
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
-      <div className="card" style={{ marginTop: 16 }}>
+      <div className="card section">
         <h3>Driving licence</h3>
         <form onSubmit={saveLicence}>
           <label className="label" htmlFor="licenceNumber">Licence number</label>

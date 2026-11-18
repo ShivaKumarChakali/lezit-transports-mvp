@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import DashboardCard from '@/components/DashboardCard';
+import PageHeader from '@/components/PageHeader';
+import StatusBadge from '@/components/StatusBadge';
 import { api, type AuthUser } from '@/lib/auth';
 import { formatDateOnly } from '@/lib/dates';
 import type { ApiDocument, ApiProfile, ApiSchedule, ApiTrip, ApiVehicle } from '@/lib/api-types';
@@ -123,11 +125,10 @@ export default function OwnerDashboard() {
 
   return (
     <div>
-      <h1>Vehicle Owner Dashboard</h1>
-      <p className="muted">Profile, business documents, vehicles and drivers — and your approval status.</p>
+      <PageHeader title="Vehicle Owner Dashboard" subtitle="Profile, business documents, vehicles and drivers — and your approval status." />
       {loading && <p className="muted">Loading…</p>}
       {error && <p className="error">{error}</p>}
-      {notice && <p>{notice}</p>}
+      {notice && <p className="notice">{notice}</p>}
       <div className="grid">
         <DashboardCard title="My vehicles" value={loading ? '—' : String(vehicles.length)} note="Vehicle registration and approval status" />
         <DashboardCard title="My drivers" value="—" note="Driver information and approval status — drivers register themselves in Phase 1" />
@@ -135,15 +136,20 @@ export default function OwnerDashboard() {
         <DashboardCard title="Approval status" value={me ? me.approvalStatus : '—'} note="Shown after an admin reviews your registration" />
       </div>
 
-      <div className="card" style={{ marginTop: 16 }}>
+      <div className="card section">
         <h3>My vehicles</h3>
         {vehicles.length === 0 && <p className="muted">No vehicles registered yet.</p>}
-        {vehicles.map((v) => (
-          <p key={v.id}>
-            {v.registrationNumber} {v.make ? `· ${v.make} ${v.model ?? ''}` : ''} · {v.seatCapacity ? `${v.seatCapacity} seats` : 'seats not set'} · {v.approvalStatus}
-          </p>
-        ))}
-        <form onSubmit={addVehicle} style={{ marginTop: 12 }}>
+        <div className="row-list">
+          {vehicles.map((v) => (
+            <div className="row" key={v.id}>
+              <span className="row-text">
+                {v.registrationNumber} {v.make ? `· ${v.make} ${v.model ?? ''}` : ''} · {v.seatCapacity ? `${v.seatCapacity} seats` : 'seats not set'}
+              </span>
+              <StatusBadge status={v.approvalStatus} />
+            </div>
+          ))}
+        </div>
+        <form onSubmit={addVehicle} className="form-block">
           <h3>Register a vehicle</h3>
           <label className="label" htmlFor="regNo">Registration number</label>
           <input id="regNo" className="input" required value={regNo} onChange={(e) => setRegNo(e.target.value)} />
@@ -159,19 +165,27 @@ export default function OwnerDashboard() {
         </form>
       </div>
 
-      <div className="card" style={{ marginTop: 16 }}>
+      <div className="card section">
         <h3>Schedules &amp; trips using my vehicles</h3>
         {schedules.length === 0 && <p className="muted">No schedules use your vehicles yet.</p>}
-        {schedules.map((s) => (
-          <p key={s.id}>{s.departureTime} · {s.days.join(', ') || 'no days set'} · {s.active ? 'active' : 'inactive'}</p>
-        ))}
+        <div className="row-list">
+          {schedules.map((s) => (
+            <div className="row" key={s.id}>
+              <span className="row-text">{s.departureTime} · {s.days.join(', ') || 'no days set'}</span>
+              <StatusBadge status={s.active ? 'active' : 'inactive'} />
+            </div>
+          ))}
+          {trips.map((t) => (
+            <div className="row" key={t.id}>
+              <span className="row-text">{formatDateOnly(t.date)}</span>
+              <StatusBadge status={t.status} />
+            </div>
+          ))}
+        </div>
         {trips.length === 0 && <p className="muted">No trips use your vehicles yet.</p>}
-        {trips.map((t) => (
-          <p key={t.id}>{formatDateOnly(t.date)} · {t.status}</p>
-        ))}
       </div>
 
-      <div className="card" style={{ marginTop: 16 }}>
+      <div className="card section">
         <h3>Business profile</h3>
         <form onSubmit={saveProfile}>
           <label className="label" htmlFor="businessName">Business name</label>
@@ -184,16 +198,21 @@ export default function OwnerDashboard() {
         </form>
       </div>
 
-      <div className="card" style={{ marginTop: 16 }}>
+      <div className="card section">
         <h3>Documents</h3>
         <p className="muted">Metadata only in Phase 1 — no file storage provider is connected yet.</p>
         {documents.length === 0 && <p className="muted">No documents recorded yet.</p>}
-        {documents.map((d) => (
-          <p key={d.id}>
-            {d.fileName} {d.documentKind ? `· ${d.documentKind}` : ''} · {d.verified ? 'verified' : 'not verified'}
-          </p>
-        ))}
-        <form onSubmit={addDocument} style={{ marginTop: 12 }}>
+        <div className="row-list">
+          {documents.map((d) => (
+            <div className="row" key={d.id}>
+              <span className="row-text">
+                {d.fileName} {d.documentKind ? `· ${d.documentKind}` : ''}
+              </span>
+              <StatusBadge status={d.verified ? 'verified' : 'not verified'} />
+            </div>
+          ))}
+        </div>
+        <form onSubmit={addDocument} className="form-block">
           <label className="label" htmlFor="docName">Document name</label>
           <input id="docName" className="input" required value={docName} onChange={(e) => setDocName(e.target.value)} />
           <label className="label" htmlFor="docKind">Document type (e.g. identity, business, vehicle)</label>

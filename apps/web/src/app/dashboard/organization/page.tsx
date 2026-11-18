@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import DashboardCard from '@/components/DashboardCard';
+import PageHeader from '@/components/PageHeader';
+import StatusBadge from '@/components/StatusBadge';
 import { api, type AuthUser } from '@/lib/auth';
 import type { ApiProfile, ApiRoute, ApiSchedule } from '@/lib/api-types';
 
@@ -64,31 +66,35 @@ export default function OrganizationDashboard() {
 
   return (
     <div>
-      <h1>Organization Dashboard</h1>
-      <p className="muted">Organization registration, profile and contact information. Phase 1 is account access only.</p>
+      <PageHeader title="Organization Dashboard" subtitle="Organization registration, profile and contact information. Phase 1 is account access only." />
       {loading && <p className="muted">Loading…</p>}
       {error && <p className="error">{error}</p>}
-      {notice && <p>{notice}</p>}
+      {notice && <p className="notice">{notice}</p>}
       <div className="grid">
         <DashboardCard title="Profile" value={orgName || '—'} note="Organization profile and contact information" />
         <DashboardCard title="Passengers" value="—" note="Phase 2: employee / student passenger registration" />
         <DashboardCard title="Assigned transport" value={loading ? '—' : String(routes.length)} note="Routes available to the organization" />
         <DashboardCard title="Attendance" value="—" note="Phase 2: passenger attendance overview" />
       </div>
-      <div className="card" style={{ marginTop: 16 }}>
+      <div className="card section">
         <h3>Routes &amp; schedules</h3>
         {routes.length === 0 && <p className="muted">No routes published yet.</p>}
-        {routes.map((r) => (
-          <p key={r.id}>
-            {r.name} · {r.startLocation} → {r.endLocation}
-          </p>
-        ))}
+        <div className="row-list">
+          {routes.map((r) => (
+            <div className="row" key={r.id}>
+              <span className="row-text">{r.name} · {r.startLocation} → {r.endLocation}</span>
+            </div>
+          ))}
+          {schedules.map((s) => (
+            <div className="row" key={s.id}>
+              <span className="row-text">{s.departureTime} · {s.days.join(', ') || 'no days set'}</span>
+              <StatusBadge status={s.active ? 'active' : 'inactive'} />
+            </div>
+          ))}
+        </div>
         {schedules.length === 0 && <p className="muted">No schedules published yet.</p>}
-        {schedules.map((s) => (
-          <p key={s.id}>{s.departureTime} · {s.days.join(', ') || 'no days set'} · {s.active ? 'active' : 'inactive'}</p>
-        ))}
       </div>
-      <div className="card" style={{ marginTop: 16 }}>
+      <div className="card section">
         <h3>Organization profile</h3>
         <p className="muted">Account status: {me ? me.approvalStatus : '—'}</p>
         <form onSubmit={saveProfile}>

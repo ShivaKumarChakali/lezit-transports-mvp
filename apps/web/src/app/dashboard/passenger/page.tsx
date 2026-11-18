@@ -2,7 +2,10 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import DashboardCard from '@/components/DashboardCard';
+import PageHeader from '@/components/PageHeader';
+import StatusBadge from '@/components/StatusBadge';
 import { api, type AuthUser } from '@/lib/auth';
+import { formatDateTime } from '@/lib/dates';
 import type { ApiAttendance, ApiBooking, ApiProfile } from '@/lib/api-types';
 
 export default function PassengerDashboard() {
@@ -62,35 +65,44 @@ export default function PassengerDashboard() {
 
   return (
     <div>
-      <h1>Passenger Dashboard</h1>
-      <p className="muted">Passenger registration, profile and contact details. Phase 1 is account access only.</p>
+      <PageHeader title="Passenger Dashboard" subtitle="Passenger registration, profile and contact details. Phase 1 is account access only." />
       {loading && <p className="muted">Loading…</p>}
       {error && <p className="error">{error}</p>}
-      {notice && <p>{notice}</p>}
+      {notice && <p className="notice">{notice}</p>}
       <div className="grid">
         <DashboardCard title="My transport" value={loading ? '—' : String(bookings.filter((b) => b.status === 'confirmed').length)} note="Confirmed bookings" />
         <DashboardCard title="Pickup & drop" value="—" note="See your booking's route for pickup and drop locations" />
         <DashboardCard title="Booking status" value={loading ? '—' : String(bookings.length)} note="Your bookings" />
         <DashboardCard title="Attendance" value={loading ? '—' : String(attendance.length)} note="Your check-in / check-out records" />
       </div>
-      <div className="card" style={{ marginTop: 16 }}>
+      <div className="card section">
         <h3>My bookings</h3>
         {bookings.length === 0 && <p className="muted">No bookings yet — an admin creates bookings for you.</p>}
-        {bookings.map((b) => (
-          <p key={b.id}>{b.seats} seat(s) · {b.status} · booked {new Date(b.createdAt).toLocaleDateString()}</p>
-        ))}
+        <div className="row-list">
+          {bookings.map((b) => (
+            <div className="row" key={b.id}>
+              <span className="row-text">{b.seats} seat(s) · booked {new Date(b.createdAt).toLocaleDateString()}</span>
+              <StatusBadge status={b.status} />
+            </div>
+          ))}
+        </div>
       </div>
-      <div className="card" style={{ marginTop: 16 }}>
+      <div className="card section">
         <h3>Attendance history</h3>
         {attendance.length === 0 && <p className="muted">No attendance records yet.</p>}
-        {attendance.map((a) => (
-          <p key={a.id}>
-            {a.status} · checked in {new Date(a.checkInAt).toLocaleString()}
-            {a.checkOutAt ? ` · checked out ${new Date(a.checkOutAt).toLocaleString()}` : ''}
-          </p>
-        ))}
+        <div className="row-list">
+          {attendance.map((a) => (
+            <div className="row" key={a.id}>
+              <span className="row-text">
+                checked in {formatDateTime(a.checkInAt)}
+                {a.checkOutAt ? ` · checked out ${formatDateTime(a.checkOutAt)}` : ''}
+              </span>
+              <StatusBadge status={a.status} />
+            </div>
+          ))}
+        </div>
       </div>
-      <div className="card" style={{ marginTop: 16 }}>
+      <div className="card section">
         <h3>Passenger profile</h3>
         <p className="muted">Account status: {me ? me.approvalStatus : '—'}</p>
         <form onSubmit={saveProfile}>
