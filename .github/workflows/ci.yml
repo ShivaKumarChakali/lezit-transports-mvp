@@ -7,15 +7,11 @@
 #   3. ui-test — Playwright smoke tests against the Next.js app
 #   4. deploy  — Railway, ONLY on push to main and ONLY if build + test + ui-test pass
 #
-# Required secret for deploy (GitHub Settings > Secrets and variables > Actions):
-#   RAILWAY_TOKEN — a Railway account token (railway.app dashboard > Tokens).
-#   No real token is stored here. Until it is added, the deploy job will fail
-#   at the "Deploy to Railway" step — that is expected.
-#   The Railway project must already exist and be linked to this repo
-#   (run `railway link` once locally, or set the project in the Railway
-#   dashboard). For this monorepo, configure two Railway services,
-#   one for apps/api and one for apps/web, and adjust the working
-#   directory / --service flag in the deploy steps below if needed.
+# Deployment is handled by Railway itself: the Railway project watches the
+# repo's main branch and auto-deploys the api service (apps/api) and the web
+# service (apps/web) on every push. No token or CLI step is needed here, so
+# this workflow only builds and tests. The RAILWAY_TOKEN secret is no longer
+# used; it can be removed from the repo's Actions secrets.
 
 name: CI / CD
 
@@ -138,27 +134,7 @@ jobs:
     needs: [build, test, ui-test]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
-      - name: Check out code
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli
-
-      - name: Deploy to Railway
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      - name: Note Railway auto-deploy
         run: |
-          if [ -z "$RAILWAY_TOKEN" ]; then
-            echo "::error::RAILWAY_TOKEN secret is not set. Add it in GitHub Settings > Secrets and variables > Actions."
-            exit 1
-          fi
-          # Deploys the linked Railway project. For this monorepo, link the
-          # project once (railway link) and configure one service per app
-          # (apps/api and apps/web) in the Railway dashboard.
-          railway up --detach
+          echo "Railway auto-deploys the api and web services from main on every push."
+          echo "See the Railway project dashboard for the live deploy status."

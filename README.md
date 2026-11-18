@@ -2,11 +2,10 @@
 
 [![CI / CD](https://github.com/ShivaKumarChakali/lezit-transports-mvp/actions/workflows/ci.yml/badge.svg)](https://github.com/ShivaKumarChakali/lezit-transports-mvp/actions/workflows/ci.yml)
 
-Fresh build for LEZIT TRANSPORTS, 17 November 2026.
-Total scope: ₹2,00,000 + 18% GST = ₹2,36,000, 320 hours, 10–14 weeks, two phases.
-This scaffold is **Phase 1 only** — platform foundation and core management. See “What is still TODO” below.
+A transportation management platform for LEZIT TRANSPORTS: register vehicle owners, manage drivers and vehicles, create routes, schedule trips, allocate passengers and monitor daily transportation operations.
+This build covers the platform foundation and core management. See “What is still TODO” below.
 
-## Stack (exactly as quoted)
+## Stack
 
 | Component | Technology |
 |---|---|
@@ -69,9 +68,9 @@ First accounts: register via `/register` (pick a role) or via the API
 `POST /auth/register`. The first `super_admin` / `lezit_admin` accounts must be
 created by the project owner — there is no public self-registration for
 `super_admin` in production use; the register endpoint accepts the role for
-local Phase 1 testing only.
+local testing only.
 
-## Phase 1 — included in this scaffold
+## Included in this build
 
 - Secure login / register, JWT, bcrypt password hashing
 - RBAC: NestJS `RolesGuard` + `@Roles()` decorator; Next.js middleware protecting `/dashboard/*`
@@ -79,7 +78,7 @@ local Phase 1 testing only.
 - Prisma schema: users, vehicle-owner / driver / organization / passenger profiles, vehicles, documents (metadata only), approval status `pending | approved | rejected`, account status `active | inactive`
 - API: `POST /auth/register`, `POST /auth/login`, `GET /auth/me`, `GET /users` (admin), `GET /users/:id`, `PATCH /users/:id/approval`, `GET /vehicles`, `POST /vehicles`, `GET /vehicles/:id`
 
-## What is still TODO (Phase 2, per the quote)
+## What is still TODO
 
 Routes, pickup/drop locations, schedules, vehicle/driver assignment, passenger
 registration & allocation, manual bookings, trip management, passenger
@@ -98,20 +97,20 @@ shows exactly which stage went red: `build`, `test`, `ui-test`, `deploy`.
 | `build` | Install deps, generate the Prisma Client, typecheck + lint + build both apps |
 | `test` | Jest unit tests (API) + Vitest unit tests (web) |
 | `ui-test` | Playwright smoke tests (login page, auth redirect); the HTML report is uploaded as an artifact if the job fails |
-| `deploy` | Railway deploy — **only on push to `main`, only if build + test + ui-test all pass** |
+| `deploy` | Notes that Railway auto-deploys on push to `main` — **only after build + test + ui-test all pass** |
 
 Local equivalents: `npm run typecheck`, `npm run lint`, `npm run build`,
 `npm test` (unit tests), `npm run test:ui` (Playwright, in `apps/web`).
 
-**Deploy needs one secret:** `RAILWAY_TOKEN` — add it in GitHub
-Settings > Secrets and variables > Actions. Get it from the Railway
-dashboard (Tokens) on the Railway **trial** account for now; move to a paid
-Railway plan only after the demo is shown to the friend and approved. No
-token is stored in this repo. The Railway project must already exist and be
-linked to this repo; configure one Railway service per app (`apps/api` and
-`apps/web`) and a PostgreSQL database in Railway.
+**Deploy:** Railway watches the repo's `main` branch and auto-deploys two
+services, one per app (`apps/api` and `apps/web`), plus a PostgreSQL database
+in the same Railway project. No token is stored in this repo. The Railway
+project runs on a **trial** account for now; move to a paid Railway plan only
+after the demo is shown to the friend and approved. The API service runs the
+database migration (`prisma migrate deploy`) before starting, so the tables
+are created on first deploy.
 
-## Explicitly NOT in the MVP (per the quote, §10)
+## Explicitly NOT in the MVP
 
 Automated self-service booking, live GPS tracking & maps, OTP / QR passenger
 verification, online payment gateway, automated invoices & settlements,
