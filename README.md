@@ -64,21 +64,40 @@ npm run dev:web           # in another terminal
 Frontend env: copy `apps/web/.env.example` to `apps/web/.env.local` and set
 `NEXT_PUBLIC_API_URL=http://localhost:3001` (already the default).
 
-First accounts: register via `/register` (pick a role) or via the API
-`POST /auth/register`. The first `super_admin` / `lezit_admin` accounts must be
-created by the project owner — there is no public self-registration for
-`super_admin` in production use; the register endpoint accepts the role for
-local testing only.
+First accounts: register via `/register` (vehicle owner, driver, organization
+or passenger only — admin roles cannot self-register). New accounts start
+pending approval and cannot log in until an admin approves them; registration
+returns no token. Admin accounts are created by an existing Super Admin
+(`POST /users`) or by the seed script:
+
+```bash
+SEED_ADMIN_EMAIL=admin@example.com SEED_ADMIN_PASSWORD='...' npm run seed --workspace=apps/api
+```
+
+With no env vars set, the seed only approves the oldest pending Super Admin
+(if one exists and no approved Super Admin exists yet), so a deployment can
+never be locked out of its own admin account. Never put a real password in
+the repo — it comes from the environment only.
 
 ## Included in this build
 
-- Secure login / register, JWT, bcrypt password hashing
-- RBAC: NestJS `RolesGuard` + `@Roles()` decorator; Next.js middleware protecting `/dashboard/*`
-- 6 dashboard shells with LEZIT gold (`#d4af37`) / black (`#111111`) / cream (`#f7f1df`) branding, sidebar + header, placeholder cards
+- Secure login / register, JWT, bcrypt password hashing. Public registration
+  allows only vehicle owner, driver, organization and passenger, creates a
+  pending account and returns no token; login requires approved + active
+  status. Admin accounts are created by a Super Admin or the seed script.
+- RBAC: NestJS `RolesGuard` + `@Roles()` decorator; Next.js middleware decodes
+  the JWT role and redirects wrong-role dashboard visits, the dashboard layout
+  and sidebar enforce the same check, and the API remains the source of truth.
+  Vehicle owners can only see their own vehicles (list and single fetch).
+- 6 dashboards wired to the real APIs: Super Admin and LEZIT Admin show live
+  counts, pending user/vehicle approvals (approve / reject) and
+  activate / deactivate actions; Owner registers vehicles, manages its
+  business profile and document records; Driver saves licence details and
+  sees verification status; Organization and Passenger manage their profiles.
 - Prisma schema: users, vehicle-owner / driver / organization / passenger profiles, vehicles, documents (metadata only), approval status `pending | approved | rejected`, account status `active | inactive`
-- API: `POST /auth/register`, `POST /auth/login`, `GET /auth/me`, `GET /users` (admin), `GET /users/:id`, `PATCH /users/:id/approval`, `GET /vehicles`, `POST /vehicles`, `GET /vehicles/:id`
+- API: `POST /auth/register`, `POST /auth/login`, `GET /auth/me`, `GET /users` (admin), `GET /users/:id`, `PATCH /users/:id/approval`, `PATCH /users/:id/status`, `POST /users` (Super Admin creates admin accounts), `GET /vehicles`, `POST /vehicles`, `GET /vehicles/:id`, `PATCH /vehicles/:id/approval`, `GET /profiles/me`, `PATCH /profiles/me`, `GET /profiles/:userId` (admin), `POST /documents`, `GET /documents`, `GET /documents/:id`, `PATCH /documents/:id/verify` (admin)
 
-## What is still TODO
+## What is still TODO (Phase 2)
 
 Routes, pickup/drop locations, schedules, vehicle/driver assignment, passenger
 registration & allocation, manual bookings, trip management, passenger
